@@ -1,4 +1,4 @@
 import periodic_table
 
-window = periodic_table.Window()
-window.mainloop()
+app = periodic_table.MainWindow()
+app.mainloop()

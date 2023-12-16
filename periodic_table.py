@@ -4,6 +4,9 @@ import json
 import random
 from functools import partial
 
+## --- local imports:
+from elconf_window import ElconfWindow
+
 # --- Group name mapping
 GROUP_NAMES = {
     1: "I.A",
@@ -42,12 +45,24 @@ HELP_FONT = ("Helvetica", 12)
 ACTIVE_FONT = ("Helvetica", 14)
 # ---
 
-def load_table(path: str) -> list[str, str, int, int]:
+def load_table(path: str) -> tuple[list[tuple[str, str, int, int, int]], dict[str, str]]:
     """
     Funtion to load all neccessary chemical data
+
+    returns:
+    - list containing tuple of
+        - name of the element
+        - its symbol
+        - its period
+        - its group
+        - its atomic number
+    - dict made of:
+        - key: symbol of element
+        - value: electron configuration
     """
 
     res = []
+    elconf = {}
 
     with open(path, encoding="utf8") as f:
         table = json.load(f)
@@ -59,18 +74,19 @@ def load_table(path: str) -> list[str, str, int, int]:
 
             res.append( (table[elem]["name"], table[elem]["symbol"],
                          table[elem]["period"], table[elem]["group"], table[elem]["number"]) )
+            elconf[table[elem]["symbol"]] = table[elem]["electron_configuration"].replace(" ", "")
 
-    return res
+    return res, elconf
 
 
-class Window(tk.Tk):
+class MainWindow(tk.Tk):
 
     def __init__(self, *args) -> None:
         super().__init__(*args)
         self.geometry(f"{INITIAL_WIDTH}x{INITIAL_HEIGHT}")
         self.title("Periodic table drill")
         self.configure(background=BG_COLOR)
-        self.table = load_table("table.json")
+        self.table, self.elconf = load_table("table.json")
 
         self.base_elements = []
         self.round_elements = []
@@ -78,6 +94,7 @@ class Window(tk.Tk):
         self.buttons = {}
         self.missed_buttons = []
 
+        self.elconf_active = tk.IntVar()
         self.active_element = tk.StringVar()
         self.active_element.set("??")
         self.win_phrase = tk.StringVar()
@@ -234,8 +251,20 @@ class Window(tk.Tk):
                                     columnspan=3,
                                     rowspan=1,
                                     pady=10)
+
+        tk.Checkbutton(self,
+                       text="Electron\nconfiguration",
+                       variable=self.elconf_active,
+                       indicator=0,
+                       bg=BG_COLOR,
+                       fg=TEXT_COLOR,
+                       selectcolor=SUCCESS_COLOR,
+                       font=FONT).grid(row=11 + y_padding + 2,
+                                       column=18,
+                                       columnspan=2)
         ## ---
 
+    ## --- Button helpers
     ## recolor red cells
     def recolor_missed(self) -> None:
         for button in self.missed_buttons:
@@ -252,6 +281,11 @@ class Window(tk.Tk):
         random.shuffle(self.round_elements)
         self.active_element.set(self.round_elements.pop())
 
+    ## electron configuration handling
+    def elconf_handle(self, symbol: str) -> None:
+        elconf = ElconfWindow()
+        elconf.configure(symbol, "abc")
+
     ## functionality of periodic table buttons
     def fill(self, x: int, y: int) -> None:
         button, symbol = self.buttons[(x, y)]
@@ -259,34 +293,37 @@ class Window(tk.Tk):
             button.configure(bg=SUCCESS_COLOR, text=symbol)
             self.next_active()
             self.recolor_missed()
+            self.elconf_handle(symbol)
+
 
         ## We did not select alredy solved button
         elif button.cget("bg") != SUCCESS_COLOR:
             button.configure(bg=FAIL_COLOR)
             self.missed_buttons.append(button)
 
+    ## ---
     ## --- Button functionality
     def show_hide(self, initial=False) -> None:
         # initial - during the first hiding (also during the restart) remove green/red colors
-        self.show_button.configure(text="Hide\ntable" if self.table_shown else "Show\ntable")
+        self.show_button.configure(text="Show\ntable" if self.table_shown else "Hide\ntable")
         for button, symbol in self.buttons.values():
             color = BG_COLOR if initial else button.cget("bg")
-            to_fill = "" if self.table_shown else symbol
+            to_fill = symbol if (not self.table_shown or color == SUCCESS_COLOR) else "" 
             button.configure(text=to_fill, bg=color)
         self.table_shown = not self.table_shown
 
     def start(self) -> None:
 
         self.win_phrase.set("")
+
         # initialize active element
         self.round_elements = self.base_elements[:]
 
         # hide elements
+        self.table_shown = True
         self.show_hide(initial=True)
 
-        if self.table_shown:
-            self.show_hide()
-
+        # generate active element
         self.next_active()
 
     def restart(self) -> None:
