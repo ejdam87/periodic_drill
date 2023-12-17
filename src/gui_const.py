@@ -1,0 +1,17 @@
+# --- GUI constants
+INITIAL_WIDTH = 1000
+INITIAL_HEIGHT = 600
+
+ELCONF_WIDTH = 700
+ELCONF_HEIGHT = 230
+
+SUCCESS_COLOR = "#04BD35"
+FAIL_COLOR = "#AB052C"
+BG_COLOR = "#000000"
+
+TEXT_COLOR = "#FFFFFF"
+
+FONT = ("Helvetica", 10)
+HELP_FONT = ("Helvetica", 12)
+ACTIVE_FONT = ("Helvetica", 14)
+# ---
