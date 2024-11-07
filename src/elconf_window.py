@@ -10,6 +10,7 @@ class ElconfWindow(tk.Toplevel):
         super().__init__(*args)
         self.geometry(f"{ELCONF_WIDTH}x{ELCONF_HEIGHT}")
         self.title("Electron configuration")
+        self.iconbitmap("icon.ico")
 
     def configure_quiz(self, symbol: str, correct_answer: str) -> None:
         self.correct = correct_answer
