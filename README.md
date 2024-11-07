@@ -1,5 +1,5 @@
 # Periodic table drill
-This is a simple GUI application for practising positions of chemical elements in the periodic table.
+This is a simple GUI application for practising positions of chemical elements in the periodic table and their electron configurations.
 
 ## Dependencies
 There are no 3rd party dependencies.
